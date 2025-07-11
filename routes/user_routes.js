@@ -1,18 +1,36 @@
-// user_routes.js
 const express = require("express");
 const router = express.Router();
+const path = require("path");
+const multer = require("multer");
 
-// Import middleware for validation
-const { signupValidation } = require("../helpers/validation"); // Ensure this path is correct
+// Multer storage config
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    if (file.mimetype === "image/jpeg" || file.mimetype === "image/png") {
+      cb(null, path.join(__dirname, "../public/images"));
+    }
+  },
+  filename: function (req, file, cb) {
+    const name = Date.now() + "-" + file.originalname;
+    cb(null, name);
+  },
+});
 
-// Import controller
-const userController = require("../controllers/user_controller"); // Ensure this path is correct
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype === "image/png" || file.mimetype === "image/jped") {
+    cb(null, true);
+  } else {
+    cb(null, false);
+  }
+};
+const upload = multer({ storage: storage, fileFilter: fileFilter });
 
-// Debugging imports
-console.log({ signupValidation, userController });
+// Controller
+const userController = require("../controllers/user_controller");
 
-// Route for user registration
-router.post("/register", signupValidation, userController.register);
+// Routes
 
-// Export the router
+const {signupValidation} = require("../helpers/validation")
+router.post("/register", upload.single("image"),signupValidation, userController.userRegister);
+
 module.exports = router;
